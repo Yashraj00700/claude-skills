@@ -3,7 +3,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
-from check_contract import validate  # noqa: E402
+from check_contract import find_default_contract, validate  # noqa: E402
 
 
 def rules_hit(text, target_path, contract):
@@ -87,3 +87,25 @@ def test_empty_contract_flags_nothing():
     text = "# comment\nSome long line " + "x" * 200 + "\n"
     report = validate(text, "file.py", {})
     assert report.is_clean
+
+
+def test_find_default_contract_in_same_directory(tmp_path):
+    contract_file = tmp_path / ".instruction-contract.yaml"
+    contract_file.write_text("no_comments: true\n")
+    found = find_default_contract(tmp_path)
+    assert found == contract_file
+
+
+def test_find_default_contract_walks_up_parents(tmp_path):
+    contract_file = tmp_path / "instruction-contract.yaml"
+    contract_file.write_text("no_comments: true\n")
+    nested = tmp_path / "src" / "deeply" / "nested"
+    nested.mkdir(parents=True)
+    found = find_default_contract(nested)
+    assert found == contract_file
+
+
+def test_find_default_contract_returns_none_when_absent(tmp_path):
+    nested = tmp_path / "src"
+    nested.mkdir()
+    assert find_default_contract(nested) is None

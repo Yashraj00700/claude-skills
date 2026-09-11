@@ -1,7 +1,4 @@
----
-name: instruction-drift-guard
-description: Mechanically re-checks Claude's own output against style/formatting rules stated earlier in a long session — catches the well-documented drift where explicit instructions (no comments, no em-dashes, specific tone, quote style) get followed for the first few turns and then quietly ignored as the session grows. Use when the user says "check you're still following my rules", "verify the style contract", "why did you add comments again", or when a long session is producing output that feels like it's drifted from earlier instructions.
----
+> This folder's `SKILL.md` is what Claude Code reads automatically (its YAML frontmatter is the trigger Claude matches against). This `README.md` is the same content rendered for anyone browsing GitHub directly — edit `SKILL.md`, not this file.
 
 # Instruction Drift Guard
 

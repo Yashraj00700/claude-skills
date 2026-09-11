@@ -138,12 +138,36 @@ def validate(text: str, target_path: str, contract: dict) -> Report:
     return report
 
 
+DEFAULT_CONTRACT_NAMES = [".instruction-contract.yaml", "instruction-contract.yaml"]
+
+
+def find_default_contract(start: Path) -> Path | None:
+    """Walk up from `start` looking for a default-named contract file, so a
+    long session can re-run this with just a target path, no retyping."""
+    for directory in [start, *start.parents]:
+        for name in DEFAULT_CONTRACT_NAMES:
+            candidate = directory / name
+            if candidate.is_file():
+                return candidate
+    return None
+
+
 def main() -> int:
-    if len(sys.argv) != 3:
-        print("Usage: check_contract.py <contract.yaml> <target-file>", file=sys.stderr)
+    if len(sys.argv) == 2:
+        target_path = sys.argv[1]
+        found = find_default_contract(Path(target_path).resolve().parent)
+        if found is None:
+            names = " or ".join(DEFAULT_CONTRACT_NAMES)
+            print(f"No contract path given and no {names} found in {target_path}'s directory or its parents.", file=sys.stderr)
+            return 2
+        contract_path = str(found)
+    elif len(sys.argv) == 3:
+        contract_path, target_path = sys.argv[1], sys.argv[2]
+    else:
+        print("Usage: check_contract.py [contract.yaml] <target-file>", file=sys.stderr)
+        print(f"  (if contract.yaml is omitted, looks for {' or '.join(DEFAULT_CONTRACT_NAMES)} in the target's directory or its parents)", file=sys.stderr)
         return 2
 
-    contract_path, target_path = sys.argv[1], sys.argv[2]
     contract = load_contract(contract_path)
     text = Path(target_path).read_text(encoding="utf-8")
     report = validate(text, target_path, contract)
