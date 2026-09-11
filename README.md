@@ -29,6 +29,7 @@ A [Claude Agent Skill](https://docs.claude.com/en/docs/claude-code/skills) is a 
 | [`lead-enrichment`](skills/lead-enrichment/SKILL.md) | Turn a company list into 5–10 verified decision-maker contacts per company | Parallel, Apollo, MillionVerifier API keys |
 | [`lead-research-assistant`](skills/lead-research-assistant/SKILL.md) | Find high-quality target companies for your product/service and get an actionable outreach strategy | None (uses Claude's own research) |
 | [`quora-answer-composer`](skills/quora-answer-composer/SKILL.md) | Draft Quora answers outside Quora's buggy editor and validate them against Quora's real formatting rules before pasting — avoids the "very poor formatting" collapse | Python 3.9+ (stdlib only) |
+| [`instruction-drift-guard`](skills/instruction-drift-guard/SKILL.md) | Re-checks Claude's own output against style rules declared earlier in a long session — catches the documented drift where explicit instructions (no comments, banned phrases, quote style) get followed for a few turns then quietly ignored | Python 3.9+, `pyyaml` |
 
 Each skill's own `SKILL.md` documents its exact trigger phrases, required setup, and what it does step by step.
 
@@ -39,6 +40,7 @@ git clone https://github.com/Yashraj00700/claude-skills
 cp -r claude-skills/skills/lead-enrichment ~/.claude/skills/
 cp -r claude-skills/skills/lead-research-assistant ~/.claude/skills/
 cp -r claude-skills/skills/quora-answer-composer ~/.claude/skills/
+cp -r claude-skills/skills/instruction-drift-guard ~/.claude/skills/
 ```
 
 Or install just the one you need — each skill folder is self-contained and has no dependency on the others.
@@ -53,6 +55,7 @@ flowchart TD
     M -->|Enrich this lead list| A[lead-enrichment]
     M -->|Find companies to target| B[lead-research-assistant]
     M -->|Write or fix a Quora answer| C[quora-answer-composer]
+    M -->|Check I'm still following the rules| D[instruction-drift-guard]
     M -->|No match| N[Claude answers directly, no skill loaded]
 ```
 
@@ -70,13 +73,24 @@ python -m pytest tests/ -v
 
 11 tests, covering the exact patterns that trigger Quora's formatting collapse (manual bullet characters, missing paragraph spacing, bold overuse, overlong paragraphs) plus the "clean input stays clean" negative cases.
 
+`instruction-drift-guard` ships 12 tests the same way:
+
+```bash
+cd claude-skills/skills/instruction-drift-guard
+pip install pytest pyyaml
+python -m pytest tests/ -v
+```
+
 ## FAQ
 
 **What is a Claude Agent Skill?**
 A folder with a `SKILL.md` file — a `description` Claude matches against your requests, plus instructions and optional helper scripts. Claude Code auto-discovers skills placed in `.claude/skills/`. See [Anthropic's own skills documentation](https://docs.claude.com/en/docs/claude-code/skills) for the full spec.
 
-**Do I need all three skills installed?**
+**Do I need all four skills installed?**
 No. Copy only the skill folder(s) you want — each is fully self-contained.
+
+**Is instruction/style drift over a long session a real, documented problem?**
+Yes — [anthropics/claude-code#77136](https://github.com/anthropics/claude-code/issues/77136) (423 reactions) and [#65961](https://github.com/anthropics/claude-code/issues/65961) (219 reactions) are both open issues on Claude Code's own repository describing exactly this. `instruction-drift-guard` was built in direct response to those, not a hypothesis.
 
 **Why does `quora-answer-composer` tell me to draft outside Quora instead of just fixing Quora's editor?**
 Because a Claude Skill can't patch a website's own JavaScript. What it can do is change your workflow to avoid the specific bugs (cursor jumping mid-edit, drafts vanishing) and validate your text against Quora's real formatting rules before you ever paste it in. See the skill's own `SKILL.md` for the cited sources behind that design.

@@ -1,0 +1,27 @@
+# Copy and edit at the start of a task with real style constraints.
+# Every field is optional — only declared rules get checked.
+
+no_comments: true
+
+banned_phrases:
+  - "it's important to note"
+  - "in today's fast-paced world"
+  - "delve into"
+  - "tapestry"
+  - "boasts"
+  - "moreover"
+  - "furthermore"
+
+banned_chars:
+  - "—" # em-dash
+
+quote_style: straight # straight | curly
+
+max_line_length: 100
+
+code_extensions:
+  - .py
+  - .js
+  - .ts
+  - .go
+  - .rs
